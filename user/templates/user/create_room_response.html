@@ -1,0 +1,23 @@
+{% extends 'user/main.html' %}
+
+{% block content %}
+
+
+<div class="container">
+    <div class="row">
+        <h2>Thanks {{tshirtroom.name}} 😃 for registering your URL, share it with your friends 🎉</h1>
+    </div>
+    <div class="row">
+        <div class="col*-*">
+            <div class="card">
+                <div class="card-body">
+                <img src="../../../../media/{{tshirt.img_url}}" height="450" width="600" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h1>{{tshirtroom.slug}}</h1>
+
+{% endblock %}
