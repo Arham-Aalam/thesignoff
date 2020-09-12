@@ -27,7 +27,11 @@ def register_user(request, tid, name):
 
         content = {
             'tshirtroom': tr_,
-            'tshirt': ts_
+            'tshirt': ts_,
+            'urlinfo': {
+                'host': request.get_host(),
+                'protocol': request.scheme
+            }
         }
         return render(request, 'user/create_room_response.html', content)    
     raise Http404
@@ -37,6 +41,9 @@ def register_user_v2(request):
         data = json.loads(request.body)
         return ''
 
+def get_room(request, slug):
+    if request.method == 'GET':
+        return render('room.html')
 
 '''
 Get user's ip

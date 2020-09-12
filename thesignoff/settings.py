@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -72,6 +73,24 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'thesignoff.wsgi.application'
+ASGI_APPLICATION = 'thesignoff.routing.application'
+
+
+CHANNEL_LAYERS = {
+    'default': {
+       'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+            # "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+        },
+    },
+    #'default': {
+    #    'BACKEND': 'asgi_redis.core.RedisChannelLayer',
+    #    'CONFIG': {
+    #        "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+    #    }
+    #}
+}
 
 
 # Database
