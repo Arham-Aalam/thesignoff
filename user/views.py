@@ -43,7 +43,22 @@ def register_user_v2(request):
 
 def get_room(request, slug):
     if request.method == 'GET':
-        return render('room.html')
+        tsr = TshirtRoom.objects.get(slug=slug)
+        if tsr is None:
+            raise Http404
+        userip = request.META.get("REMOTE_ADDR")
+        frd = Friend(name="", tshirt_room=tsr, key_points="[]", ip=userip)
+        frd.save()
+
+        frds = Friend.objects.filter(tshirt_room=tsr).values()
+        
+        tsr = serializers.serialize('python', [tsr])[0]
+        frds = list(frds)
+        frd = serializers.serialize('python', [frd])[0]
+
+        print("==>", tsr, frds)
+
+        return render(request, 'user/room.html', {'tsr': tsr, 'frds': frds, "frd": frd})
 
 '''
 Get user's ip

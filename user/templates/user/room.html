@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"{{tsr.name}}'s room"</title>
+    <style>
+        body {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+
+        #draw-canvas{
+            display: block;
+            margin-left: 7.5%;
+            margin-top:1.5%;
+        }
+
+        #draw-color-select{
+            display: inline-block;
+            margin-left: calc(1% - 8px);
+        }
+
+        #draw-clear{
+            display: inline-block;
+            position: absolute;
+            right: 1%;
+        }
+    </style>
+</head>
+<body>
+    <input id="frds" style="display: none;" value="{{frds}}"></input>
+    <input id="frds" style="display: none;" value="{{frd}}"></input>
+    <input id="frds" style="display: none;" value="{{tsr}}"></input>
+    <select id="draw-color-select" name="colors">
+        <option value="#ff0000">Red</option>
+        <option value="#00ff00">Green</option>
+        <option value="#0000ff">Blue</option>
+        <option value="#000000">Black</option>
+        <option value="#ffffff">White</option>
+    </select>
+    <button id="draw-clear" type="button">Clear all</button>
+    <canvas id="draw-canvas" style="border:1px solid #000000;"></canvas>
+    <script>
+        window.name = prompt("Hey mate, please enter your name.");
+        
+        window.friends = JSON.parse(document.getElementById("frds").value);
+        window.friend = JSON.parse(document.getElementById("frd").value);
+        window.tshirtroom = JSON.parse(document.getElementById("tsr").value);
+
+        console.log(window.friends);
+        let ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+
+        let x1;
+        let y1;
+        let x2;
+        let y2;
+
+        let coords = [];
+
+        let base_image = new Image();
+        base_image.src = "../../../media/{{tsr.tshirt.imgurl}}";
+        
+        let context = document.querySelector('#draw-canvas').getContext("2d");
+        context.drawImage(base_image, 0, 0);
+
+        let socket = new WebSocket(ws_scheme + "://{{host}}/ws/tshirtroom/{{slug}}/");
+
+        socket.onopen = function(e){
+            alert("Connected!!");
+        }
+
+        socket.onmessage = function(e) {
+            console.log("==>", e.data);
+            data = JSON.parse(e.data);
+            // update the frds broadcasted from channel
+            // also call window.friends.update();
+            window.friends = data;
+            window.friends.update();
+            draw_();
+        }
+
+        socket.onclose = function(e) {
+            alert("Disconneced!!");
+        }
+
+        //document.querySelector('#draw-canvas').onmousemove = function(e) {cord_start(e); cord_end(); capture_draw()};
+        //document.querySelector('#draw-canvas').ontouchstart = function(e) {cord_touch(e, "start")};
+        //document.querySelector('#draw-canvas').ontouchmove = function(e) {cord_touch(e, "end"); capture_draw(); cord_pass_down()};
+        document.querySelector('#draw-clear').onclick = function(){clear_draw()};
+
+        document.querySelector('#draw-canvas').onmousedown = function(e) {startrecord(e)}
+        document.querySelector('#draw-canvas').onmouseup = function(e) {stoprecord(e)}
+
+        function startrecord(e) {
+        let x, y;
+        if (e.pageX || e.pageY) {
+            x = e.pageX;
+            y = e.pageY;
+        } else {
+            x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        x -= document.querySelector('#draw-canvas').offsetLeft;
+        y -= document.querySelector('#draw-canvas').offsetTop;
+        
+        coords.push([x, y])
+        }
+
+        function stoprecord(e) {
+            socket.send(JSON.stringify({
+                "job": 'append',
+                'uid': window.friend.id,
+                'trid': window.tshirtroom.id,
+                'name': window.name,
+                'color': drawColor.value,
+                "coords": coords
+            }))
+
+            coords = [];
+        }
+
+        function cord_start(e){
+        if (e.pageX || e.pageY) {
+            x1 = e.pageX;
+            y1 = e.pageY;
+        } else {
+            x1 = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            y1 = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        x1 -= document.querySelector('#draw-canvas').offsetLeft;
+        y1 -= document.querySelector('#draw-canvas').offsetTop;
+    }
+
+    function cord_end(){
+        x2 = x1 + 4;
+        y2 = y1 + 4;
+    }
+
+    function cord_touch(e, state){
+        let x,y;
+        if (e.changedTouches[e.changedTouches.length-1].pageX || e.changedTouches[e.changedTouches.length-1].pageY) {
+            x = e.changedTouches[e.changedTouches.length-1].pageX;
+            y = e.changedTouches[e.changedTouches.length-1].pageY;
+        } else {
+            x = e.changedTouches[e.changedTouches.length-1].clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            y = e.changedTouches[e.changedTouches.length-1].clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        x -= document.querySelector('#draw-canvas').offsetLeft;
+        y -= document.querySelector('#draw-canvas').offsetTop;
+        if (state === "start"){
+            x1 = x;
+            y1 = y;
+        } else {
+            x2 = x;
+            y2 = y;
+        }
+    }
+
+    function cord_pass_down(){
+        x1 = x2;
+        y1 = y2;
+    }
+
+    function capture_draw(){
+        let drawColor = document.querySelector('#draw-color-select');
+
+        socket.send(JSON.stringify({
+            'job': 'append',
+            'uid': window.friend.id,
+            'trid': window.tshirtroom.id,
+            'name': window.name,
+            'color': drawColor.value,
+            'x1': x1,
+            'y1': y1,
+            'x2': x2,
+            'y2': y2
+        }));
+    }
+
+    function clear_draw(){
+        let our_canvas = document.getElementById("draw-canvas");
+        let ctx = our_canvas.getContext("2d");
+
+        ctx.clearRect(0,0, our_canvas.width, our_canvas.height);
+        ctx.drawImage(base_image, 0, 0);
+
+        socket.send(JSON.stringify({
+            'job': 'clear'
+        }));
+    }
+
+    function resize_canvas() {
+        let our_canvas = document.getElementById("draw-canvas");
+        our_canvas.height = window.innerHeight * .8;
+        our_canvas.width = window.innerWidth * .85;
+    }
+
+    function draw_() {
+        for(i=0;i<window.friends.length;i++) {
+            let frd = window.friends[i];
+
+            let ppoint = [];
+            for(i=0;i<frd.key_points.length;i++) {
+                if(i==0) {
+                    ppoint = frd.key_points[i];
+                    continue;
+                }
+
+                point = frd.key_points[i];
+                
+                x1, y1 = ppoint[0], ppoint[1];
+                x2, y2 = point[0], point[1];
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineWidth = 5;
+                ctx.strokeStyle = frd.color;
+                ctx.stroke();
+
+                ppoint = frd.key_points[i];
+            }
+        }
+    }
+    draw_();
+    </script>
+</body>
+</html>

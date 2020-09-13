@@ -28,8 +28,15 @@ class TshirtRoom(models.Model):
             self.slug = self._get_unique_slug()
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.name}"
+
 class Friend(models.Model):
     name = models.CharField(max_length=50, null=False)
     tshirt_room = models.ForeignKey(TshirtRoom, on_delete=models.CASCADE)
     key_points = models.TextField()
-    ip = models.CharField(max_length=20, unique=True)
+    ip = models.CharField(max_length=20)
+    color = models.CharField(max_length=10, default='#000000')
+
+    def __str__(self):
+        return f"{self.name}"
