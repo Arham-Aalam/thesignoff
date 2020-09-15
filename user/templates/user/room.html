@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>"{{tsr.name}}'s room"</title>
+    <title>"{{tsr.fields.name}}'s room"</title>
     <style>
         body {
         background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
@@ -56,11 +56,36 @@
     <button id="draw-clear" type="button">Clear all</button>
     <canvas id="draw-canvas" style="border:1px solid #000000;"></canvas>
     <script>
+        class Tshirt {
+            constructor(name, tshirt, slug) {
+                this.name = name;
+                this.tshit = tshirt;
+                this.slug = slug;
+            }
+        }
+        class Friend {
+            constructor(name, tshirt_room_id, key_points, color) {
+                this.name = name;
+                this.tshirt_room_id = tshirt_room_id;
+                this.key_points = key_points;
+                this.color = color;
+            }
+        }
+
+        window.friend = new Friend("{{frd.fields.name}}", "{{frd.fields.tshirt_room_id}}", "{{frd.fields.key_points}}", "{{frd.fields.color}}");
+        window.tshirtroom = new Friend("{{tsr.fields.name}}", "{{tsr.fields.tshirt}}", "{{tsr.fields.slug}}");
+        window.friends = [];
+
+        {% for ff in frds %}
+        var f = new Friend("{{ff.name}}", "{{ff.tshirt_room_id}}", "{{ff.key_points}}", "{{ff.color}}");
+        window.friends.push(f);
+        {% endfor %}
+
         window.name = prompt("Hey mate, please enter your name.");
         
-        window.friends = JSON.parse(document.getElementById("frds").value);
-        window.friend = JSON.parse(document.getElementById("frd").value);
-        window.tshirtroom = JSON.parse(document.getElementById("tsr").value);
+        //window.friends = JSON.parse("{{frds}}");
+        //window.friend = JSON.parse("{{frd}}");
+        //window.tshirtroom = JSON.parse("{{tsr}}");
 
         console.log(window.friends);
         let ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
@@ -211,6 +236,9 @@
     }
 
     function draw_() {
+        let our_canvas = document.getElementById("draw-canvas");
+        let ctx = our_canvas.getContext("2d");
+        
         for(i=0;i<window.friends.length;i++) {
             let frd = window.friends[i];
 
