@@ -2,6 +2,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.core import serializers
 
+from .models import *
+
 import json
 
 class TshirtConsumer(AsyncWebsocketConsumer):
@@ -14,15 +16,18 @@ class TshirtConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         await self.accept()
+        print('Connected!!')
 
     async def disconnect(self, close_code):
         # await self.disconnect()
-        await self.channel_layer.group_discard(
-            self.groupname,
-            self.channel_name
-        )
+        if self.groupname:
+            await self.channel_layer.group_discard(
+                self.groupname,
+                self.channel_name
+            )
+            print('Disconnected!!')
 
-    async def receive(self, text_data):
+    async def receive(self, text_data, bytes_data=None):
         print('>>>>', text_data)
         obj = json.loads(text_data)
         

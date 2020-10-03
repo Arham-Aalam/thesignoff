@@ -46,6 +46,7 @@ def get_room(request, slug):
         tsr = TshirtRoom.objects.get(slug=slug)
         if tsr is None:
             raise Http404
+        tsrImg = Tshirt.objects.get(id=tsr.tshirt.id)
         userip = request.META.get("REMOTE_ADDR")
         frd = Friend(name="", tshirt_room=tsr, key_points="[]", ip=userip)
         frd.save()
@@ -58,7 +59,7 @@ def get_room(request, slug):
 
         print("==>", tsr, frds)
 
-        return render(request, 'user/room.html', {'tsr': tsr, 'frds': frds, "frd": frd})
+        return render(request, 'user/room.html', {'tsr': tsr, 'frds': frds, "frd": frd , 'host': request.get_host(), 'tsrImg': tsrImg})
 
 '''
 Get user's ip

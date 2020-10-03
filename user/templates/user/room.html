@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>"{{tsr.fields.name}}'s room"</title>
     <style>
+        
         body {
         background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-        background-size: 400% 400%;
         animation: gradient 15s ease infinite;
         }
 
@@ -23,7 +23,7 @@
             }
         }
 
-
+        /*
         #draw-canvas{
             display: block;
             margin-left: 7.5%;
@@ -40,21 +40,25 @@
             position: absolute;
             right: 1%;
         }
+        */
     </style>
 </head>
 <body>
-    <input id="frds" style="display: none;" value="{{frds}}"></input>
-    <input id="frds" style="display: none;" value="{{frd}}"></input>
-    <input id="frds" style="display: none;" value="{{tsr}}"></input>
-    <select id="draw-color-select" name="colors">
-        <option value="#ff0000">Red</option>
-        <option value="#00ff00">Green</option>
-        <option value="#0000ff">Blue</option>
-        <option value="#000000">Black</option>
-        <option value="#ffffff">White</option>
-    </select>
-    <button id="draw-clear" type="button">Clear all</button>
-    <canvas id="draw-canvas" style="border:1px solid #000000;"></canvas>
+    <div class="row">
+        <select id="draw-color-select" name="colors">
+            <option value="#ff0000">Red</option>
+            <option value="#00ff00">Green</option>
+            <option value="#0000ff">Blue</option>
+            <option value="#000000">Black</option>
+            <option value="#ffffff">White</option>
+        </select>
+        <button id="draw-clear" type="button">Clear all</button>
+    </div>
+    <br>
+    <div class="row">
+    <canvas id="draw-canvas" style="border:1px solid #000000; width: 100%; background-image:url('../../../media/{{tsrImg.img_url}}'); background-repeat: no-repeat; background-size: cover; padding-bottom: 20%"></canvas>
+    </div>
+    <img id="scream" src="../../../media/{{tsrImg.img_url}}"  style="border:1px solid #000000; padding: 40px; width: 80%; display: none;"/>
     <script>
         class Tshirt {
             constructor(name, tshirt, slug) {
@@ -82,10 +86,6 @@
         {% endfor %}
 
         window.name = prompt("Hey mate, please enter your name.");
-        
-        //window.friends = JSON.parse("{{frds}}");
-        //window.friend = JSON.parse("{{frd}}");
-        //window.tshirtroom = JSON.parse("{{tsr}}");
 
         console.log(window.friends);
         let ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
@@ -95,16 +95,15 @@
         let x2;
         let y2;
 
-        let coords = [];
+        window.coords = [];
 
         let base_image = new Image();
-        base_image.src = "../../../media/{{tsr.tshirt.imgurl}}";
+        base_image.src = "../../../media/{{tsrImg.img_url}}";
+        console.log("==>", base_image.src)
         
-        let context = document.querySelector('#draw-canvas').getContext("2d");
-        context.drawImage(base_image, 0, 0);
-
-        let socket = new WebSocket(ws_scheme + "://{{host}}/ws/tshirtroom/{{slug}}/");
-
+        /*
+        let socket = new WebSocket(ws_scheme + "://{{host}}/ws/tshirtroom/{{tsr.fields.slug}}");
+        console.log("connecting to: ", ws_scheme + "://{{host}}/ws/tshirtroom/{{tsr.fields.slug}}");
         socket.onopen = function(e){
             alert("Connected!!");
         }
@@ -123,40 +122,89 @@
             alert("Disconneced!!");
         }
 
+        socket.onerror = function(error) {
+            alert(`[error] ${error.message}`);
+        };
+        */
+
         //document.querySelector('#draw-canvas').onmousemove = function(e) {cord_start(e); cord_end(); capture_draw()};
         //document.querySelector('#draw-canvas').ontouchstart = function(e) {cord_touch(e, "start")};
         //document.querySelector('#draw-canvas').ontouchmove = function(e) {cord_touch(e, "end"); capture_draw(); cord_pass_down()};
         document.querySelector('#draw-clear').onclick = function(){clear_draw()};
 
-        document.querySelector('#draw-canvas').onmousedown = function(e) {startrecord(e)}
+        document.querySelector('#draw-canvas').onmousedown = function(e) {startrecord(e);}
+        document.querySelector('#draw-canvas').addEventListener('mousemove', startrecord2);
         document.querySelector('#draw-canvas').onmouseup = function(e) {stoprecord(e)}
 
-        function startrecord(e) {
-        let x, y;
-        if (e.pageX || e.pageY) {
-            x = e.pageX;
-            y = e.pageY;
-        } else {
-            x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-            y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-        }
-        x -= document.querySelector('#draw-canvas').offsetLeft;
-        y -= document.querySelector('#draw-canvas').offsetTop;
+        let our_canvas = document.getElementById("draw-canvas");
+        window.ctx = our_canvas.getContext("2d");
         
-        coords.push([x, y])
+        isMouseDown=false;
+        async function startrecord(e) {
+            let x, y;
+            if (e.pageX || e.pageY) {
+                console.log("==>", our_canvas.offsetLeft, our_canvas.offsetTop);
+                x = e.pageX - our_canvas.offsetLeft;
+                y = e.pageY - our_canvas.offsetTop;
+            } else {
+                x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+            }
+            isMouseDown = true;
+            window.coords.push([x, y]);
+            drawCoords(window.coords);
+        }
+
+        async function startrecord2(e) {
+            if(!isMouseDown) 
+            return;
+
+            let x, y;
+            if (e.pageX || e.pageY) {
+                console.log("==>", our_canvas.offsetLeft, our_canvas.offsetTop);
+                x = e.pageX - our_canvas.offsetLeft;
+                y = e.pageY - our_canvas.offsetTop;
+            } else {
+                x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+            }
+            window.coords.push([x, y]);
+            drawCoords(window.coords);
+        }
+
+        async function drawCoords(coords) {
+            if (coords.length < 2) {
+                return;
+            }
+            let ctx = document.getElementById("draw-canvas").getContext("2d");
+            p1 = coords[coords.length - 2];
+            p2 = coords[coords.length - 1];
+            console.log(p1, p2)
+            let x1=p1[0], y1 = p1[1];
+            let x2 = p2[0], y2 = p2[1];
+            ctx.beginPath();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = window.friend.color;
+            console.log(x1, y1, x2, y2);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
         }
 
         function stoprecord(e) {
+            isMouseDown = false;
+            console.log("sending", window.coords);
+            /*
             socket.send(JSON.stringify({
                 "job": 'append',
                 'uid': window.friend.id,
                 'trid': window.tshirtroom.id,
                 'name': window.name,
                 'color': drawColor.value,
-                "coords": coords
+                "coords": window.coords
             }))
-
-            coords = [];
+            */
+            window.coords = [];
         }
 
         function cord_start(e){
@@ -218,11 +266,9 @@
     }
 
     function clear_draw(){
-        let our_canvas = document.getElementById("draw-canvas");
-        let ctx = our_canvas.getContext("2d");
 
-        ctx.clearRect(0,0, our_canvas.width, our_canvas.height);
-        ctx.drawImage(base_image, 0, 0);
+        window.ctx.clearRect(0,0, our_canvas.width, our_canvas.height);
+        //window.ctx.drawImage(base_image, 0, 0);
 
         socket.send(JSON.stringify({
             'job': 'clear'
@@ -236,34 +282,35 @@
     }
 
     function draw_() {
-        let our_canvas = document.getElementById("draw-canvas");
-        let ctx = our_canvas.getContext("2d");
         
         for(i=0;i<window.friends.length;i++) {
             let frd = window.friends[i];
-
+            console.log(frd);
             let ppoint = [];
-            for(i=0;i<frd.key_points.length;i++) {
-                if(i==0) {
-                    ppoint = frd.key_points[i];
+            for(j=0;j<frd.key_points.length;j++) {
+                if(j==0) {
+                    ppoint = frd.key_points[j];
                     continue;
                 }
 
-                point = frd.key_points[i];
+                point = frd.key_points[j];
                 
                 x1, y1 = ppoint[0], ppoint[1];
                 x2, y2 = point[0], point[1];
 
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.lineWidth = 5;
-                ctx.strokeStyle = frd.color;
-                ctx.stroke();
+                window.ctx.beginPath();
+                window.ctx.lineWidth = 5;
+                window.ctx.strokeStyle = frd.color;
 
-                ppoint = frd.key_points[i];
+                window.ctx.moveTo(x1, y1);
+                window.ctx.lineTo(x2, y2);
+
+                window.ctx.stroke();
+
+                ppoint = frd.key_points[j];
             }
         }
+        console.log('DONE!!!!');
     }
     draw_();
     </script>
