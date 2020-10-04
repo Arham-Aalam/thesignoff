@@ -55,11 +55,12 @@ def get_room(request, slug):
         
         tsr = serializers.serialize('python', [tsr])[0]
         frds = list(frds)
-        frd = serializers.serialize('python', [frd])[0]
+        frdd = serializers.serialize('python', [frd])[0]
+        frdd['id'] = frd.id
 
-        print("==>", tsr, frds)
+        print("==>", tsr, frds, frdd)
 
-        return render(request, 'user/room.html', {'tsr': tsr, 'frds': frds, "frd": frd , 'host': request.get_host(), 'tsrImg': tsrImg})
+        return render(request, 'user/room2.html', {'tsr': tsr, 'frds': frds, "frd": frdd , 'host': request.get_host(), 'tsrImg': tsrImg})
 
 '''
 Get user's ip

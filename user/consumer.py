@@ -35,7 +35,7 @@ class TshirtConsumer(AsyncWebsocketConsumer):
             self.groupname,
             {
                 'type': 'broadcast',
-                'coords': obj
+                'coords': obj['coords']
             }
         )
     
@@ -59,16 +59,16 @@ class TshirtConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def clear_points(self, data):
-        fid = data[id]
-        friend = Friend.objects.get(id=pid)
+        fid = data['uid']
+        friend = Friend.objects.get(id=fid)
 
         friend.key_points = json.dumps([])
         friend.save()
 
     @database_sync_to_async
     def insert_coords(self, data):
-        fid = data[id]
-        friend = Friend.objects.get(id=pid)
+        fid = data['uid']
+        friend = Friend.objects.get(id=fid)
         pdata = friend.key_points
 
         pdata = json.loads(pdata)

@@ -32,6 +32,7 @@ class TshirtRoom(models.Model):
         return f"{self.name}"
 
 class Friend(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=50, null=False)
     tshirt_room = models.ForeignKey(TshirtRoom, on_delete=models.CASCADE)
     key_points = models.TextField()
