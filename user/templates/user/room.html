@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"{{tsr.fields.name}}'s room"</title>
+    <style>
+        
+        body {
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /*
+        #draw-canvas{
+            display: block;
+            margin-left: 7.5%;
+            margin-top:1.5%;
+        }
+
+        #draw-color-select{
+            display: inline-block;
+            margin-left: calc(1% - 8px);
+        }
+
+        #draw-clear{
+            display: inline-block;
+            position: absolute;
+            right: 1%;
+        }
+        */
+    </style>
+</head>
+<body>
+    <div class="row">
+        <select id="draw-color-select" name="colors">
+            <option value="#ff0000">Red</option>
+            <option value="#00ff00">Green</option>
+            <option value="#0000ff">Blue</option>
+            <option value="#000000">Black</option>
+            <option value="#ffffff">White</option>
+        </select>
+        <button id="draw-clear" type="button">Clear all</button>
+    </div>
+    <br>
+    <div class="row">
+    <canvas id="draw-canvas" style="border:1px solid #000000; width: 100%; background-image:url('../../../media/{{tsrImg.img_url}}'); background-repeat: no-repeat; background-size: cover; padding-bottom: 20%"></canvas>
+    </div>
+    <img id="scream" src="../../../media/{{tsrImg.img_url}}"  style="border:1px solid #000000; padding: 40px; width: 80%; display: none;"/>
+    <script>
+        class Tshirt {
+            constructor(name, tshirt, slug) {
+                this.name = name;
+                this.tshit = tshirt;
+                this.slug = slug;
+            }
+        }
+        class Friend {
+            constructor(name, tshirt_room_id, key_points, color) {
+                this.name = name;
+                this.tshirt_room_id = tshirt_room_id;
+                this.key_points = key_points;
+                this.color = color;
+            }
+        }
+
+        window.friend = new Friend("{{frd.fields.name}}", "{{frd.fields.tshirt_room_id}}", "{{frd.fields.key_points}}", "{{frd.fields.color}}");
+        window.tshirtroom = new Friend("{{tsr.fields.name}}", "{{tsr.fields.tshirt}}", "{{tsr.fields.slug}}");
+        window.friends = [];
+
+        {% for ff in frds %}
+        var f = new Friend("{{ff.name}}", "{{ff.tshirt_room_id}}", "{{ff.key_points}}", "{{ff.color}}");
+        window.friends.push(f);
+        {% endfor %}
+
+        window.name = prompt("Hey mate, please enter your name.");
+
+        console.log(window.friends);
+        let ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+
+        let x1;
+        let y1;
+        let x2;
+        let y2;
+
+        window.coords = [];
+
+        let base_image = new Image();
+        base_image.src = "../../../media/{{tsrImg.img_url}}";
+        console.log("==>", base_image.src)
+        
+        /*
+        let socket = new WebSocket(ws_scheme + "://{{host}}/ws/tshirtroom/{{tsr.fields.slug}}");
+        console.log("connecting to: ", ws_scheme + "://{{host}}/ws/tshirtroom/{{tsr.fields.slug}}");
+        socket.onopen = function(e){
+            alert("Connected!!");
+        }
+
+        socket.onmessage = function(e) {
+            console.log("==>", e.data);
+            data = JSON.parse(e.data);
+            // update the frds broadcasted from channel
+            // also call window.friends.update();
+            window.friends = data;
+            window.friends.update();
+            draw_();
+        }
+
+        socket.onclose = function(e) {
+            alert("Disconneced!!");
+        }
+
+        socket.onerror = function(error) {
+            alert(`[error] ${error.message}`);
+        };
+        */
+
+        //document.querySelector('#draw-canvas').onmousemove = function(e) {cord_start(e); cord_end(); capture_draw()};
+        //document.querySelector('#draw-canvas').ontouchstart = function(e) {cord_touch(e, "start")};
+        //document.querySelector('#draw-canvas').ontouchmove = function(e) {cord_touch(e, "end"); capture_draw(); cord_pass_down()};
+        document.querySelector('#draw-clear').onclick = function(){clear_draw()};
+
+        document.querySelector('#draw-canvas').onmousedown = function(e) {startrecord(e);}
+        document.querySelector('#draw-canvas').addEventListener('mousemove', startrecord2);
+        document.querySelector('#draw-canvas').onmouseup = function(e) {stoprecord(e)}
+
+        let our_canvas = document.getElementById("draw-canvas");
+        window.ctx = our_canvas.getContext("2d");
+        
+        isMouseDown=false;
+        async function startrecord(e) {
+            let x, y;
+            if (e.pageX || e.pageY) {
+                console.log("==>", our_canvas.offsetLeft, our_canvas.offsetTop);
+                x = e.pageX - our_canvas.offsetLeft;
+                y = e.pageY - our_canvas.offsetTop;
+            } else {
+                x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+            }
+            isMouseDown = true;
+            window.coords.push([x, y]);
+            drawCoords(window.coords);
+        }
+
+        async function startrecord2(e) {
+            if(!isMouseDown) 
+            return;
+
+            let x, y;
+            if (e.pageX || e.pageY) {
+                console.log("==>", our_canvas.offsetLeft, our_canvas.offsetTop);
+                x = e.pageX - our_canvas.offsetLeft;
+                y = e.pageY - our_canvas.offsetTop;
+            } else {
+                x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+                y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+            }
+            window.coords.push([x, y]);
+            drawCoords(window.coords);
+        }
+
+        async function drawCoords(coords) {
+            if (coords.length < 2) {
+                return;
+            }
+            let ctx = document.getElementById("draw-canvas").getContext("2d");
+            p1 = coords[coords.length - 2];
+            p2 = coords[coords.length - 1];
+            console.log(p1, p2)
+            let x1=p1[0], y1 = p1[1];
+            let x2 = p2[0], y2 = p2[1];
+            ctx.beginPath();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = window.friend.color;
+            console.log(x1, y1, x2, y2);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+        }
+
+        function stoprecord(e) {
+            isMouseDown = false;
+            console.log("sending", window.coords);
+            /*
+            socket.send(JSON.stringify({
+                "job": 'append',
+                'uid': window.friend.id,
+                'trid': window.tshirtroom.id,
+                'name': window.name,
+                'color': drawColor.value,
+                "coords": window.coords
+            }))
+            */
+            window.coords = [];
+        }
+
+        function cord_start(e){
+        if (e.pageX || e.pageY) {
+            x1 = e.pageX;
+            y1 = e.pageY;
+        } else {
+            x1 = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            y1 = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        x1 -= document.querySelector('#draw-canvas').offsetLeft;
+        y1 -= document.querySelector('#draw-canvas').offsetTop;
+    }
+
+    function cord_end(){
+        x2 = x1 + 4;
+        y2 = y1 + 4;
+    }
+
+    function cord_touch(e, state){
+        let x,y;
+        if (e.changedTouches[e.changedTouches.length-1].pageX || e.changedTouches[e.changedTouches.length-1].pageY) {
+            x = e.changedTouches[e.changedTouches.length-1].pageX;
+            y = e.changedTouches[e.changedTouches.length-1].pageY;
+        } else {
+            x = e.changedTouches[e.changedTouches.length-1].clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+            y = e.changedTouches[e.changedTouches.length-1].clientY + document.body.scrollTop + document.documentElement.scrollTop;
+        }
+        x -= document.querySelector('#draw-canvas').offsetLeft;
+        y -= document.querySelector('#draw-canvas').offsetTop;
+        if (state === "start"){
+            x1 = x;
+            y1 = y;
+        } else {
+            x2 = x;
+            y2 = y;
+        }
+    }
+
+    function cord_pass_down(){
+        x1 = x2;
+        y1 = y2;
+    }
+
+    function capture_draw(){
+        let drawColor = document.querySelector('#draw-color-select');
+
+        socket.send(JSON.stringify({
+            'job': 'append',
+            'uid': window.friend.id,
+            'trid': window.tshirtroom.id,
+            'name': window.name,
+            'color': drawColor.value,
+            'x1': x1,
+            'y1': y1,
+            'x2': x2,
+            'y2': y2
+        }));
+    }
+
+    function clear_draw(){
+
+        window.ctx.clearRect(0,0, our_canvas.width, our_canvas.height);
+        //window.ctx.drawImage(base_image, 0, 0);
+
+        socket.send(JSON.stringify({
+            'job': 'clear'
+        }));
+    }
+
+    function resize_canvas() {
+        let our_canvas = document.getElementById("draw-canvas");
+        our_canvas.height = window.innerHeight * .8;
+        our_canvas.width = window.innerWidth * .85;
+    }
+
+    function draw_() {
+        
+        for(i=0;i<window.friends.length;i++) {
+            let frd = window.friends[i];
+            console.log(frd);
+            let ppoint = [];
+            for(j=0;j<frd.key_points.length;j++) {
+                if(j==0) {
+                    ppoint = frd.key_points[j];
+                    continue;
+                }
+
+                point = frd.key_points[j];
+                
+                x1, y1 = ppoint[0], ppoint[1];
+                x2, y2 = point[0], point[1];
+
+                window.ctx.beginPath();
+                window.ctx.lineWidth = 5;
+                window.ctx.strokeStyle = frd.color;
+
+                window.ctx.moveTo(x1, y1);
+                window.ctx.lineTo(x2, y2);
+
+                window.ctx.stroke();
+
+                ppoint = frd.key_points[j];
+            }
+        }
+        console.log('DONE!!!!');
+    }
+    draw_();
+    </script>
+</body>
+</html>

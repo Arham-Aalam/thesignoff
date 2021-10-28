@@ -1,0 +1,96 @@
+{% extends 'user/main.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <h1>Hi Dude</h1>
+        <hr>
+        <h3>A quick fact about calling you dude:</h3>
+        <h4>In the early 1960s, dude became prominent in surfer culture as a synonym of guy or fella. The female equivalent was "dudette" or "dudess". but these have both fallen into disuse and "dude" is now also used as a unisex term.</h4>
+    </div>
+    <div class="row">
+        <h2>Pick the best color suits you (I'm not racist, just giving freedom to choose any color) 😜</h2>
+    </div>
+    <br>
+    <div class="row">
+        <div class="card-carousel">
+            {% for tshirt in tshirts %}
+            <div class="my-card">
+              <div class="container">
+              <div class="row">
+                  <div class="col-*-*">
+                      <img src="../media/{{tshirt.img_url}}" height="230" width="220" />
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-*-*">
+                      <button type="button" class="btn btn-primary" onclick="choose({{tshirt.id}})" style="display: flex; justify-content: center; align-items: center;">I like it!!</button>
+                  </div>
+              </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>     
+    </div>
+</div>
+<script>
+  var name_ = "";
+    $num = $('.my-card').length;
+$even = $num / 2;
+$odd = ($num + 1) / 2;
+
+if ($num % 2 == 0) {
+  $('.my-card:nth-child(' + $even + ')').addClass('active');
+  $('.my-card:nth-child(' + $even + ')').prev().addClass('prev');
+  $('.my-card:nth-child(' + $even + ')').next().addClass('next');
+} else {
+  $('.my-card:nth-child(' + $odd + ')').addClass('active');
+  $('.my-card:nth-child(' + $odd + ')').prev().addClass('prev');
+  $('.my-card:nth-child(' + $odd + ')').next().addClass('next');
+}
+
+$('.my-card').click(function() {
+  $slide = $('.active').width();
+  console.log($('.active').position().left);
+  
+  if ($(this).hasClass('next')) {
+    $('.card-carousel').stop(false, true).animate({left: '-=' + $slide});
+  } else if ($(this).hasClass('prev')) {
+    $('.card-carousel').stop(false, true).animate({left: '+=' + $slide});
+  }
+  
+  $(this).removeClass('prev next');
+  $(this).siblings().removeClass('prev active next');
+  
+  $(this).addClass('active');
+  $(this).prev().addClass('prev');
+  $(this).next().addClass('next');
+});
+
+
+// Keyboard nav
+$('html body').keydown(function(e) {
+  if (e.keyCode == 37) { // left
+    $('.active').prev().trigger('click');
+  }
+  else if (e.keyCode == 39) { // right
+    $('.active').next().trigger('click');
+  }
+});
+
+// choose tshirt
+function choose(id) {
+  if (name_ === "") {
+    name_ = prompt('Please enter your name to proceed.')
+  }
+  location.href=`/user/submittshirt/${id}/${name_}`
+}
+
+$(window).on('load',function(){
+        // $('#myModal').modal('show');
+        name_ = prompt('Hi, let me know your name first.')
+
+  });
+</script>
+{% endblock %}

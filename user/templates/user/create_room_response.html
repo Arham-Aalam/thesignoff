@@ -1,0 +1,70 @@
+{% extends 'user/main.html' %}
+
+{% block content %}
+<style type="text/css"> 
+    #share-buttons img {
+    width: 35px;
+    padding: 5px;
+    border: 0;
+    box-shadow: 0;
+    display: inline;
+  }
+</style>
+
+<div class="container">
+    <div class="row">
+        <h2>Thanks {{tshirtroom.name}} 😃 for registering your URL, share it with your friends 🎉</h1>
+    </div>
+    <div class="row">
+        <div style="margin: auto; max-width: 700px;">
+            <!-- {{urlinfo.protocol}}:{{urlinfo.host}} -->
+            <img src="../../../../media/{{tshirt.img_url}}" height="450" width="600" />    
+        </div>
+        <br/>
+        <div style="margin: auto; max-width: 700px;">
+            <div id="share-buttons">
+                <!-- Email -->
+                <a href="mailto:?Subject=Simple Share Buttons&amp;Body=I%20would%20like%20to%20invite%20you%20to%20sign%20on%20my%20tshirt%20here:%20{{urlinfo.host}}/user/{{tshirtroom.slug}}">
+                    <img src="https://simplesharebuttons.com/images/somacro/email.png" alt="Email" />
+                </a>
+             
+                <!-- Facebook -->
+                <a href="http://www.facebook.com/sharer.php?u={{urlinfo.host}}/user/{{tshirtroom.slug}}" target="_blank">
+                    <img src="https://simplesharebuttons.com/images/somacro/facebook.png" alt="Facebook" />
+                </a>
+                
+                <!-- StumbleUpon-->
+                <a href="http://www.stumbleupon.com/submit?url=https://simplesharebuttons.com&amp;title=I would like to invite you to sign on my tshirt here: {{urlinfo.host}}/user/{{tshirtroom.slug}}" target="_blank">
+                    <img src="https://simplesharebuttons.com/images/somacro/stumbleupon.png" alt="StumbleUpon" />
+                </a>
+                 
+                <!-- Twitter -->
+                <a href="https://twitter.com/share?url=https://simplesharebuttons.com&amp;text=I would like to invite you to sign on my tshirt here: {{urlinfo.host}}/user/{{tshirtroom.slug}}&amp;" target="_blank">
+                    <img src="https://simplesharebuttons.com/images/somacro/twitter.png" alt="Twitter" />
+                </a>
+                
+                <!-- Whatsapp -->
+                <a href="https://api.whatsapp.com/send?text=I would like to invite you to sign on my tshirt here: {{urlinfo.host}}/user/{{tshirtroom.slug}}" target="_blank">
+                    <img src="https://icons.iconarchive.com/icons/dtafalonso/android-l/64/WhatsApp-icon.png" alt="Whatsapp" />
+                </a>
+
+                <button class="btn btn-primary" id="clipb" onclick="copyit()">Copy Link</button>
+            
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="application/javascript">
+    function copyit() {
+        var input = document.createElement('textarea');
+        input.innerHTML = "{{urlinfo.host}}/user/{{tshirtroom.slug}}";
+        document.body.appendChild(input);
+        input.select();
+        var result = document.execCommand('copy');
+        document.body.removeChild(input);
+
+        alert("Link is copied!! Share it with your friends.");
+    }
+</script>
+{% endblock %}
